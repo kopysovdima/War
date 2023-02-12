@@ -7,63 +7,91 @@ namespace War
     {
         static void Main(string[] args)
         {
+            PlatoonCreater platoonCreator = new PlatoonCreater();
+            Platoon platoonCountryRed = platoonCreator.Create(5);
+            Platoon platoonCountryBlue = platoonCreator.Create(5);
+
             Battlefield battlefield = new Battlefield();
-            battlefield.OpenMenu();
+            battlefield.OpenMenu(platoonCountryRed, platoonCountryBlue);
         }
     }
 
     class Battlefield
     {
-        private Platoon _platoonCountryRed = new Platoon(15);
-        private Platoon _platoonCountryBlue = new Platoon(15);
-
-        public void OpenMenu()
+        public void OpenMenu(Platoon platoonCountryRed, Platoon platoonCountryBlue)
         {
             Console.WriteLine("Война между взводами двух стран, краной и синей");
             Console.ReadKey();
-            Battle();
-            ShowBattleResult();
+            Battle(platoonCountryRed, platoonCountryBlue);
+            ShowBattleResult(platoonCountryRed, platoonCountryBlue);
         }
 
-        public void Battle()
+        public void Battle(Platoon platoonCountryRed, Platoon platoonCountryBlue)
         {
-            while (_platoonCountryRed.Count > 0 && _platoonCountryBlue.Count > 0)
+            
+
+            while (platoonCountryRed.Count > 0 && platoonCountryBlue.Count > 0)
             {
-                Soldier firstSolider = _platoonCountryRed.GetSoldier();
-                Soldier secondSolider = _platoonCountryBlue.GetSoldier();
+                Soldier firstSolider = platoonCountryRed.GetSoldier();
+                Soldier secondSolider = platoonCountryBlue.GetSoldier();
 
                 Console.WriteLine("Красный взвод:");
-                _platoonCountryRed.ShowPlatoon();
+                platoonCountryRed.ShowPlatoon();
                 Console.WriteLine("Синий взвод:");
-                _platoonCountryBlue.ShowPlatoon();
+                platoonCountryBlue.ShowPlatoon();
 
                 firstSolider.Takedamage(secondSolider.Damage);
                 secondSolider.Takedamage(firstSolider.Damage);
                 firstSolider.TryUseSpecialAbility();
                 secondSolider.TryUseSpecialAbility();
 
-                _platoonCountryRed.RemoveSoldier(firstSolider);
-                _platoonCountryBlue.RemoveSoldier(secondSolider);
+                platoonCountryRed.RemoveSoldier(firstSolider);
+                platoonCountryBlue.RemoveSoldier(secondSolider);
 
                 Console.ReadKey();
                 Console.Clear();
             }
         }
 
-        private void ShowBattleResult()
+        private void ShowBattleResult(Platoon platoonCountryRed, Platoon platoonCountryBlue)
         {
-            if (_platoonCountryRed.Count < 0 && _platoonCountryBlue.Count < 0)
+            if (platoonCountryRed.Count < 0 && platoonCountryBlue.Count < 0)
             {
                 Console.WriteLine("Ничья, оба взвода погибли");
             }
-            else if (_platoonCountryRed.Count <= 0)
+            else if (platoonCountryRed.Count <= 0)
             {
                 Console.WriteLine("Победила синяя страна");
             }
-            else if (_platoonCountryBlue.Count <= 0)
+            else if (platoonCountryBlue.Count <= 0)
             {
                 Console.WriteLine("Победила красная страна");
             }
+        }
+    }
+
+    class PlatoonCreater
+    {
+        private static Random random = new Random();
+
+        public Platoon Create(int countSoldiers)
+        {
+            List<Soldier> army = new List<Soldier>();
+
+            for (int i = 0; i < countSoldiers; i++)
+            {
+                List<Soldier> soldiers = new List<Soldier>();
+
+                soldiers.Add(new Chemist("Химик", 100, 70, 20));
+                soldiers.Add(new Air("Пилот", 160, 70, 40));
+                soldiers.Add(new Infantry("Пехота", 200, 40, 15));
+                soldiers.Add(new Sniper("Снайпер", 150, 60, 20));
+                soldiers.Add(new Artillery("Альтилерия", 100, 50, 10));
+
+                army.Add(soldiers[random.Next(soldiers.Count)]);
+            }
+
+            return new Platoon(army);
         }
     }
 
@@ -71,9 +99,9 @@ namespace War
     {
         private List<Soldier> _soldiers = new List<Soldier>();
 
-        public Platoon(int countSoldiers)
+        public Platoon(List<Soldier> soldiers)
         {
-            CreateNewPlatoon(countSoldiers);
+            _soldiers = soldiers;
         }
 
         public int Count => _soldiers.Count;
@@ -102,24 +130,7 @@ namespace War
             return _soldiers[random.Next(Count)];
         }
 
-        private void CreateNewPlatoon(int countSoldiers)
-        {
-            Random random= new Random();
-
-            for (int i = 0; i < countSoldiers; i++)
-            {
-                List<Soldier> soldiers = new List<Soldier>();
-
-                soldiers.Add(new Chemist("Химик", 100, 70, 20));
-                soldiers.Add(new Air("Пилот", 160, 70, 40));
-                soldiers.Add(new Infantry("Пехота", 200, 40, 15));
-                soldiers.Add(new Sniper("Снайпер", 150, 60, 20));
-                soldiers.Add(new Artillery("Альтилерия", 100, 50, 10));
-
-                _soldiers.Add(soldiers[random.Next(soldiers.Count)]);
-            }
-            
-        }
+        
     }
 
     class Soldier

@@ -1,8 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace War
 {
@@ -17,10 +14,8 @@ namespace War
 
     class Battlefield
     {
-        private Platoon _platoonCountryRed = new Platoon();
-        private Platoon _platoonCountryBlue = new Platoon();
-        private Soldier _firstSolider;
-        private Soldier _secondSolider;
+        private Platoon _platoonCountryRed = new Platoon(15);
+        private Platoon _platoonCountryBlue = new Platoon(15);
 
         public void OpenMenu()
         {
@@ -32,50 +27,42 @@ namespace War
 
         public void Battle()
         {
-            while (_platoonCountryRed.GetCountSolders() > 0 && _platoonCountryBlue.GetCountSolders() > 0)
+            while (_platoonCountryRed.Count > 0 && _platoonCountryBlue.Count > 0)
             {
-                _firstSolider = _platoonCountryRed.GetSoldierFromPlatoon();
-                _secondSolider = _platoonCountryBlue.GetSoldierFromPlatoon();
+                Soldier firstSolider = _platoonCountryRed.GetSoldier();
+                Soldier secondSolider = _platoonCountryBlue.GetSoldier();
+
                 Console.WriteLine("Красный взвод:");
                 _platoonCountryRed.ShowPlatoon();
                 Console.WriteLine("Синий взвод:");
                 _platoonCountryBlue.ShowPlatoon();
-                _firstSolider.Takedamage(_secondSolider.Damage);
-                _secondSolider.Takedamage(_firstSolider.Damage);
-                _firstSolider.UseAnAttack();
-                _secondSolider.UseAnAttack();
-                RemoveSoldier();
+
+                firstSolider.Takedamage(secondSolider.Damage);
+                secondSolider.Takedamage(firstSolider.Damage);
+                firstSolider.TryUseSpecialAbility();
+                secondSolider.TryUseSpecialAbility();
+
+                _platoonCountryRed.RemoveSoldier(firstSolider);
+                _platoonCountryBlue.RemoveSoldier(secondSolider);
+
                 Console.ReadKey();
-                //System.Threading.Thread.Sleep(1000);
                 Console.Clear();
             }
         }
 
         private void ShowBattleResult()
         {
-            if (_platoonCountryRed.GetCountSolders() < 0 && _platoonCountryBlue.GetCountSolders() < 0)
+            if (_platoonCountryRed.Count < 0 && _platoonCountryBlue.Count < 0)
             {
                 Console.WriteLine("Ничья, оба взвода погибли");
             }
-            else if (_platoonCountryRed.GetCountSolders() <= 0)
+            else if (_platoonCountryRed.Count <= 0)
             {
                 Console.WriteLine("Победила синяя страна");
             }
-            else if (_platoonCountryBlue.GetCountSolders() <= 0)
+            else if (_platoonCountryBlue.Count <= 0)
             {
                 Console.WriteLine("Победила красная страна");
-            }
-        }
-
-        private void RemoveSoldier()
-        {
-            if (_firstSolider.Health < 0)
-            {
-                _platoonCountryRed.RemoveSoldierFromplatoon(_firstSolider);
-            }
-            else if (_secondSolider.Health < 0)
-            {
-                _platoonCountryBlue.RemoveSoldierFromplatoon(_secondSolider);
             }
         }
     }
@@ -83,18 +70,13 @@ namespace War
     class Platoon
     {
         private List<Soldier> _soldiers = new List<Soldier>();
-        private Soldier soldier;
-        private Random _random = new Random();
 
-        public Platoon()
+        public Platoon(int countSoldiers)
         {
-            CreateNewPlatoon(10, _soldiers);
+            CreateNewPlatoon(countSoldiers);
         }
 
-        public Soldier GetSoldierFromPlatoon()
-        {
-            return _soldiers[_random.Next(0, _soldiers.Count)];
-        }
+        public int Count => _soldiers.Count;
 
         public void ShowPlatoon()
         {
@@ -105,73 +87,43 @@ namespace War
             Console.WriteLine();
         }
 
-        public void RemoveSoldierFromplatoon(Soldier soldier)
+        public void RemoveSoldier(Soldier soldier)
         {
-            _soldiers.Remove(soldier);
-        }
-
-        public void ShowSoldiers()
-        {
-            for (int i = 0; i < _soldiers.Count; i++)
+            if (soldier.Health <= 0)
             {
-                Console.Write(i + 1 + "- ");
-                _soldiers[i].ShowStats();
+                _soldiers.Remove(soldier);
             }
         }
 
-        public int GetCountSolders()
-        {
-            return _soldiers.Count;
-        }
-
-        private void CreateNewPlatoon(int numberOfPlatoon, List<Soldier> soldier)
-        {
-            for (int i = 0; i < numberOfPlatoon; i++)
-            {
-                soldier.Add(GetSoldier());
-            }
-        }
-
-        private Soldier GetSoldier()
+        public Soldier GetSoldier()
         {
             Random random = new Random();
-            int randomSoldierClass;
-            int maximumSoldierClass;
-            int minimumSoldierClass;
-            maximumSoldierClass = 5;
-            minimumSoldierClass = 0;
-            randomSoldierClass = random.Next(minimumSoldierClass, maximumSoldierClass);
 
-            if (randomSoldierClass == 0)
+            return _soldiers[random.Next(Count)];
+        }
+
+        private void CreateNewPlatoon(int countSoldiers)
+        {
+            Random random= new Random();
+
+            for (int i = 0; i < countSoldiers; i++)
             {
-                return new Artillery("Альтилерия", 100, 50, 10);
+                List<Soldier> soldiers = new List<Soldier>();
+
+                soldiers.Add(new Chemist("Химик", 100, 70, 20));
+                soldiers.Add(new Air("Пилот", 160, 70, 40));
+                soldiers.Add(new Infantry("Пехота", 200, 40, 15));
+                soldiers.Add(new Sniper("Снайпер", 150, 60, 20));
+                soldiers.Add(new Artillery("Альтилерия", 100, 50, 10));
+
+                _soldiers.Add(soldiers[random.Next(soldiers.Count)]);
             }
-            else if (randomSoldierClass == 1)
-            {
-                return new Sniper("Снайпер", 150, 60, 20);
-            }
-            else if (randomSoldierClass == 2)
-            {
-                return new Infantry("Пехота", 200, 40, 15);
-            }
-            else if (randomSoldierClass == 3)
-            {
-                return new Air("Пилот", 160, 70, 40);
-            }
-            else
-            {
-                return new Chemist("Химик", 100, 70, 20);
-            }
+            
         }
     }
 
     class Soldier
     {
-        public string Name { get; private set; }
-        public int Health { get; protected set; }
-        public int Damage { get; protected set; }
-        public int Armor { get; protected set; }
-
         public Soldier(string name, int health, int damage, int armor)
         {
             Name = name;
@@ -179,6 +131,11 @@ namespace War
             Damage = damage;
             Armor = armor;
         }
+
+        public string Name { get;}
+        public int Armor { get;}
+        public int Health { get; protected set; }
+        public int Damage { get; protected set; }
 
         public void Takedamage(int damage)
         {
@@ -191,7 +148,7 @@ namespace War
             Console.WriteLine($"{Name} - {Health} хп, {Damage} урона, {Armor} брони.");
         }
 
-        public void UseAnAttack()
+        public void TryUseSpecialAbility()
         {
             Random random = new Random();
             int randomNumber;
@@ -205,18 +162,18 @@ namespace War
             if (number == randomNumber)
             {
                 Console.WriteLine();
-                UseAttack();
+                UseSpecialAbility();
             }
         }
 
-        protected virtual void UseAttack() { }
+        protected virtual void UseSpecialAbility() { }
     }
 
     class Artillery : Soldier
     {
         public Artillery(string name, int health, int damage, int armor) : base(name, health, damage, armor) { }
 
-        protected override void UseAttack()
+        protected override void UseSpecialAbility()
         {
             Console.WriteLine($"{Name} начала попадать точно в цель");
             int plusDamage = 50;
@@ -228,7 +185,7 @@ namespace War
     {
         public Sniper(string name, int health, int damage, int armor) : base(name, health, damage, armor) { }
 
-        protected override void UseAttack()
+        protected override void UseSpecialAbility()
         {
             Console.WriteLine($"{Name} начал попадать в голову и наносить сокрушительный урон");
             int plusDamage = 100;
@@ -240,7 +197,7 @@ namespace War
     {
         public Infantry(string name, int health, int damage, int armor) : base(name, health, damage, armor) { }
 
-        protected override void UseAttack()
+        protected override void UseSpecialAbility()
         {
             Console.WriteLine($"{Name} начала использовать гранаты");
             int plusDamage = 40;
@@ -252,7 +209,7 @@ namespace War
     {
         public Air(string name, int health, int damage, int armor) : base(name, health, damage, armor) { }
 
-        protected override void UseAttack()
+        protected override void UseSpecialAbility()
         {
             Console.WriteLine($"{Name} начал бомбить ракетами");
             int plusDamage = 40;
@@ -264,7 +221,7 @@ namespace War
     {
         public Chemist(string name, int health, int damage, int armor) : base(name, health, damage, armor) { }
 
-        protected override void UseAttack()
+        protected override void UseSpecialAbility()
         {
             Console.WriteLine($"{Name} начал использовать ядовитый газ");
             int plusDamage = 2;

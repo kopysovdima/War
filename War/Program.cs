@@ -12,13 +12,13 @@ namespace War
             Platoon platoonCountryBlue = platoonCreator.Create(5);
 
             Battlefield battlefield = new Battlefield();
-            battlefield.OpenMenu(platoonCountryRed, platoonCountryBlue);
+            battlefield.Work(platoonCountryRed, platoonCountryBlue);
         }
     }
 
     class Battlefield
     {
-        public void OpenMenu(Platoon platoonCountryRed, Platoon platoonCountryBlue)
+        public void Work(Platoon platoonCountryRed, Platoon platoonCountryBlue)
         {
             Console.WriteLine("Война между взводами двух стран, краной и синей");
             Console.ReadKey();
@@ -28,7 +28,6 @@ namespace War
 
         public void Battle(Platoon platoonCountryRed, Platoon platoonCountryBlue)
         {
-            
 
             while (platoonCountryRed.Count > 0 && platoonCountryBlue.Count > 0)
             {
@@ -36,9 +35,9 @@ namespace War
                 Soldier secondSolider = platoonCountryBlue.GetSoldier();
 
                 Console.WriteLine("Красный взвод:");
-                platoonCountryRed.ShowPlatoon();
+                platoonCountryRed.ShowInfo();
                 Console.WriteLine("Синий взвод:");
-                platoonCountryBlue.ShowPlatoon();
+                platoonCountryBlue.ShowInfo();
 
                 firstSolider.Takedamage(secondSolider.Damage);
                 secondSolider.Takedamage(firstSolider.Damage);
@@ -72,7 +71,7 @@ namespace War
 
     class PlatoonCreater
     {
-        private static Random random = new Random();
+        private static Random _random = new Random();
 
         public Platoon Create(int countSoldiers)
         {
@@ -88,7 +87,7 @@ namespace War
                 soldiers.Add(new Sniper("Снайпер", 150, 60, 20));
                 soldiers.Add(new Artillery("Альтилерия", 100, 50, 10));
 
-                army.Add(soldiers[random.Next(soldiers.Count)]);
+                army.Add(soldiers[_random.Next(soldiers.Count)]);
             }
 
             return new Platoon(army);
@@ -106,12 +105,13 @@ namespace War
 
         public int Count => _soldiers.Count;
 
-        public void ShowPlatoon()
+        public void ShowInfo()
         {
             foreach (var soldier in _soldiers)
             {
                 soldier.ShowStats();
             }
+
             Console.WriteLine();
         }
 
@@ -129,8 +129,6 @@ namespace War
 
             return _soldiers[random.Next(Count)];
         }
-
-        
     }
 
     class Soldier
